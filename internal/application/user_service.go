@@ -1,37 +1,34 @@
 package application
 
 import (
+	"app/internal/application/requestdto"
 	"app/internal/domain/entity"
 	"app/internal/domain/interfaces"
-	"app/internal/infrastructure/security"
 	"errors"
 	"github.com/google/uuid"
 )
 
 type UserService struct {
 	UserRepository interfaces.UserRepository
+	TokenTool      TokenTool
 }
 
-func NewUserService(userRepository interfaces.UserRepository) *UserService {
+func NewUserService(userRepository interfaces.UserRepository, tokenTool TokenTool) *UserService {
 	return &UserService{
 		UserRepository: userRepository,
+		TokenTool:      tokenTool,
 	}
 }
 
 func (s *UserService) Login(email, password string) (string, error) {
-	// Ищем пользователя в репозитории
 	user, err := s.UserRepository.GetByEmail(email)
 	if err != nil {
-		return "", errors.New("пользователь не найден")
+		return "", errors.New("user not found")
 	}
-
-	// Проверяем пароль
 	if err := user.CheckPassword(password); err != nil {
-		return "", errors.New("неверный пароль")
+		return "", errors.New("wrong password")
 	}
-
-	// Генерируем JWT-токен
-	token, err := security.GenerateJWT(user.Id, user.Email)
+	token, err := s.TokenTool.GenerateToken(user.Id, user.Email)
 	if err != nil {
 		return "", err
 	}
@@ -41,8 +38,8 @@ func (s *UserService) Login(email, password string) (string, error) {
 
 func (s *UserService) CreateUser(email string, password string) (*entity.User, error) {
 	found, _ := s.UserRepository.GetByEmail(email)
-	if found.GetIdString() != "" {
-		return nil, errors.New("пользователь с таким email уже существует")
+	if found.GetIdString() != uuid.Nil.String() {
+		return nil, errors.New("user with this email already exists")
 	}
 	user, err := entity.NewUser(email, password)
 	if err != nil {
@@ -67,11 +64,16 @@ func (s *UserService) UpdateUser(user *entity.User, newPassword string) error {
 	if err != nil {
 		return err
 	}
+	user.SetUpdatedAt()
 	return nil
 }
 
-func (s *UserService) DeleteUser(user *entity.User) error {
-	err := s.UserRepository.Delete(user)
+func (s *UserService) DeleteUser(id string) error {
+	uid, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+	err = s.UserRepository.Delete(uid)
 	if err != nil {
 		return err
 	}
@@ -98,10 +100,10 @@ func (s *UserService) GetUserByEmail(email string) (*entity.User, error) {
 	return &user, nil
 }
 
-func (s *UserService) GetAllUsers() ([]*entity.User, error) {
-	users, err := s.UserRepository.GetAll()
+func (s *UserService) GetAllUsers(dto requestdto.PaginatedDto) (users []*entity.User, err error, limitOut int, offsetOut int) {
+	users, err, limitOut, offsetOut = s.UserRepository.GetAll(dto.Limit, dto.Offset)
 	if err != nil {
-		return nil, err
+		return nil, err, 0, 0
 	}
-	return users, nil
+	return users, nil, limitOut, offsetOut
 }

@@ -7,7 +7,8 @@ import (
 
 type Config struct {
 	Application struct {
-		Mode string
+		Mode      string
+		SecretKey []byte
 	}
 	Server struct {
 		Port string
@@ -22,20 +23,22 @@ type Config struct {
 	}
 }
 
-var AppSecretKey []byte
-
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		panic("Error loading .env file")
 	}
-	AppSecretKey = []byte(os.Getenv("APP_SECRET_KEY"))
+	AppSecretKey := []byte(os.Getenv("APP_SECRET_KEY"))
 	if len(AppSecretKey) == 0 {
 		panic("APP_SECRET_KEY is not set")
 	}
 	return &Config{
-		Application: struct{ Mode string }{
-			Mode: os.Getenv("APP_MODE"),
+		Application: struct {
+			Mode      string
+			SecretKey []byte
+		}{
+			Mode:      os.Getenv("APP_MODE"),
+			SecretKey: AppSecretKey,
 		},
 		Server: struct{ Port string }{
 			Port: os.Getenv("API_PORT"),

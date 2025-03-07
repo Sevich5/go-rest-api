@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"app/internal/application/dto"
 	"app/internal/domain/entity"
 	"app/internal/domain/interfaces"
+	"app/internal/infrastructure/persistence/converter"
 	"app/internal/infrastructure/persistence/model"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -11,28 +11,28 @@ import (
 
 type UserRepository struct {
 	db        *gorm.DB
-	converter *dto.UserConverter
+	converter *converter.UserConverter
 }
 
 func NewUserPgRepository(db *gorm.DB) interfaces.UserRepository {
 	repository := &UserRepository{
 		db:        db,
-		converter: dto.NewUserConverter(),
+		converter: converter.NewUserConverter(),
 	}
 	return repository
 }
 
-func (r *UserRepository) GetAll() ([]*entity.User, error) {
+func (r *UserRepository) GetAll(limit int, offset int) (users []*entity.User, err error, limitOut int, offsetOut int) {
 	var items []model.User
-	if err := r.db.Find(&items).Error; err != nil {
-		return nil, err
+	if err := r.db.Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+		return nil, err, 0, 0
 	}
-	users := make([]*entity.User, len(items))
+	users = make([]*entity.User, len(items))
 	for i, item := range items {
 		converted := r.converter.FromModelToDomain(&item)
 		users[i] = &converted
 	}
-	return users, nil
+	return users, nil, limit, offset
 }
 
 func (r *UserRepository) Create(user *entity.User) error {
@@ -68,8 +68,12 @@ func (r *UserRepository) Update(user *entity.User) error {
 	return nil
 }
 
-func (r *UserRepository) Delete(user *entity.User) error {
-	userModel := r.converter.FromDomainToModel(user)
+func (r *UserRepository) Delete(id uuid.UUID) error {
+	user, err := r.GetById(id)
+	if err != nil {
+		return err
+	}
+	userModel := r.converter.FromDomainToModel(&user)
 	if err := r.db.Where("id = ?", userModel.GetModelId()).Delete(&userModel).Error; err != nil {
 		return err
 	}

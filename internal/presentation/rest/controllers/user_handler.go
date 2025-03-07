@@ -3,8 +3,8 @@ package controllers
 import (
 	"app/internal/application"
 	"app/internal/application/dto"
-	"app/internal/infrastructure/persistence/model"
-	"app/internal/presentation/helper"
+	"app/internal/application/requestdto"
+	"app/internal/presentation/helpers"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -18,31 +18,74 @@ func NewUserRestHandler(service *application.UserService) *UserRestHandler {
 }
 
 func (h *UserRestHandler) GetAllUsers(c *gin.Context) {
-	users, err := h.service.GetAllUsers()
+	paginatedDto := requestdto.PaginatedDto{}
+	err := c.ShouldBindQuery(&paginatedDto)
 	if err != nil {
-		helper.JsonError(c, err, http.StatusBadRequest)
+		helpers.JsonError(c, err, http.StatusBadRequest)
+		return
+	}
+	users, err, limit, offset := h.service.GetAllUsers(paginatedDto)
+	if err != nil {
+		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	var dtoUsers []interface{}
 	for _, user := range users {
-		dtoUsers = append(dtoUsers, dto.UserPublicDto(user))
+		dtoUsers = append(dtoUsers, dto.NewUserPublicDto(user))
 	}
-	helper.JsonList(c, dtoUsers, 0, 0, len(dtoUsers))
+	helpers.JsonList(c, dtoUsers, limit, offset, len(dtoUsers))
 	return
 }
 
 func (h *UserRestHandler) CreateUser(c *gin.Context) {
-	userJson := model.User{}
+	userJson := requestdto.UserDto{}
 	err := c.BindJSON(&userJson)
 	if err != nil {
-		helper.JsonError(c, err, http.StatusBadRequest)
+		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	user, err := h.service.CreateUser(userJson.Email, userJson.Password)
 	if err != nil {
-		helper.JsonError(c, err, http.StatusBadRequest)
+		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
-	helper.JsonOk(c, dto.UserPublicDto(user))
+	helpers.JsonOk(c, dto.NewUserPrivateDto(user))
+	return
+}
+
+func (h *UserRestHandler) UpdateUser(c *gin.Context) {
+	userJson := requestdto.UserDto{}
+	err := c.BindJSON(&userJson)
+	if err != nil {
+		helpers.JsonError(c, err, http.StatusBadRequest)
+		return
+	}
+	user, err := h.service.GetUserById(userJson.Id.String())
+	if err != nil {
+		helpers.JsonError(c, err, http.StatusNotFound)
+		return
+	}
+	err = h.service.UpdateUser(user, userJson.Password)
+	if err != nil {
+		helpers.JsonError(c, err, http.StatusInternalServerError)
+		return
+	}
+	helpers.JsonOk(c, dto.NewUserPublicDto(user))
+	return
+}
+
+func (h *UserRestHandler) DeleteUser(c *gin.Context) {
+	userJson := requestdto.UserDto{}
+	err := c.BindJSON(&userJson)
+	if err != nil {
+		helpers.JsonError(c, err, http.StatusBadRequest)
+		return
+	}
+	err = h.service.DeleteUser(userJson.Id.String())
+	if err != nil {
+		helpers.JsonError(c, err, http.StatusInternalServerError)
+		return
+	}
+	helpers.JsonOk(c, nil)
 	return
 }

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"app/internal/presentation/helper"
+	"app/internal/presentation/helpers"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -13,8 +13,8 @@ func RecoveryMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("Паника: %v", err) // Логируем ошибку
-				helper.JsonError(c, errors.New(fmt.Sprintf("%s", err)), http.StatusInternalServerError)
+				log.Printf("Panic: %v", err)
+				helpers.JsonError(c, errors.New(fmt.Sprintf("%s", err)), http.StatusInternalServerError)
 				c.Abort()
 			}
 		}()

@@ -2,36 +2,48 @@ package dto
 
 import (
 	"app/internal/domain/entity"
-	"app/internal/infrastructure/persistence/model"
+	"github.com/google/uuid"
+	"time"
 )
 
-func UserPublicDto(e *entity.User) interface{} {
-	return map[string]interface{}{
-		"id":    e.Id,
-		"email": e.Email,
+type UserPublicDto struct {
+	Id        uuid.UUID  `json:"id"`
+	Email     string     `json:"email"`
+	CreatedAt time.Time  `json:"created_at,omitzero"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type UserPrivateDto struct {
+	Id        uuid.UUID  `json:"id"`
+	Email     string     `json:"email"`
+	Password  string     `json:"password"`
+	CreatedAt time.Time  `json:"created_at,omitzero"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+func NewUserPublicDto(e *entity.User) *UserPublicDto {
+	var updatedAt *time.Time
+	if !e.UpdatedAt.IsZero() {
+		updatedAt = &e.UpdatedAt
+	}
+	return &UserPublicDto{
+		Id:        uuid.MustParse(e.Id.String()),
+		Email:     e.Email,
+		CreatedAt: e.CreatedAt,
+		UpdatedAt: updatedAt,
 	}
 }
 
-type UserConverter struct{}
-
-func NewUserConverter() *UserConverter {
-	return &UserConverter{}
-}
-
-func (c *UserConverter) FromDomainToModel(d *entity.User) model.User {
-	return model.User{
-		Id:        d.Id,
-		Email:     d.Email,
-		Password:  d.Password,
-		CreatedAt: d.CreatedAt,
+func NewUserPrivateDto(e *entity.User) *UserPrivateDto {
+	var updatedAt *time.Time
+	if !e.UpdatedAt.IsZero() {
+		updatedAt = &e.UpdatedAt
 	}
-}
-
-func (c *UserConverter) FromModelToDomain(m *model.User) entity.User {
-	return entity.User{
-		Id:        m.Id,
-		Email:     m.Email,
-		Password:  m.Password,
-		CreatedAt: m.CreatedAt,
+	return &UserPrivateDto{
+		Id:        uuid.MustParse(e.Id.String()),
+		Email:     e.Email,
+		Password:  e.Password,
+		CreatedAt: e.CreatedAt,
+		UpdatedAt: updatedAt,
 	}
 }

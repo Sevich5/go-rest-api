@@ -1,7 +1,9 @@
 package main
 
-import "app/internal/infrastructure"
+import (
+	"app/internal/bootstrap"
+)
 
 func main() {
-	infrastructure.ServerRun()
+	bootstrap.ServerRun()
 }

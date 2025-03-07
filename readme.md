@@ -1,23 +1,29 @@
-### Установка:
-**Внимание! Не работает с версией postgresql = 17, использовалась последняя стабильная версия 15.***
+# Dockerized Golang REST Api boilerplate: nginx + gin + gorm + postgresSQL(with atlas migrations) + JWT Auth  
 
-Удалить /vendor (если есть)
+### Install:
+**PostgresSQL must be 15 version.***
+
 ````
 go install ariga.io/atlas/cmd/atlas@latest
 go mod download
 ````
 
-### Работа с миграциями
-**Никаких diff миграций на prod и test, если только создавать новую БД**
-#### Создать diff
+### Working with migrations
+**It must be second database for creating migrations with atlas**
+#### Make diff migration (creates sql file)
 ````
 make db-diff
 ````
-#### Применить миграции
+#### Apply migration
 ````
 make db-migrate
 ````
-#### Статус миграций
+#### Migrations status
 ````
 make db-migration-status
+````
+
+## Creating user from cli
+````
+go run cmd/api/create_user.go [email] [password]
 ````

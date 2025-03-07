@@ -19,7 +19,7 @@ services:
       - ./etc/nginx/app.template.conf:/etc/nginx/app.template.conf
       - ./static:/app/static
     ports:
-      - 80:80
+      - "80:80"
     entrypoint: >
       /bin/sh -c "envsubst '$$API_PORT' < /etc/nginx/app.template.conf > /etc/nginx/app.conf && 
       cp /etc/nginx/app.conf /etc/nginx/conf.d/default.conf && 

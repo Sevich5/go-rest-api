@@ -13,6 +13,7 @@ type User struct {
 	Email     string
 	Password  string
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewUser(email string, password string) (*User, error) {
@@ -26,12 +27,13 @@ func NewUser(email string, password string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO Вынести валидацию отдельно?
+	//TODO need validation in ValuesObject
 	return &User{
 		Id:        uuid.New(),
 		Email:     email,
 		Password:  hashedPassword,
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Time{},
 	}, nil
 }
 
@@ -49,4 +51,8 @@ func (u *User) CheckPassword(password string) error {
 
 func (u *User) GetIdString() string {
 	return u.Id.String()
+}
+
+func (u *User) SetUpdatedAt() {
+	u.UpdatedAt = time.Now()
 }
