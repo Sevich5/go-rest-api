@@ -1,14 +1,25 @@
 package helpers
 
 import (
+	"app/internal/application"
+	"errors"
 	"github.com/gin-gonic/gin"
 )
 
 func JsonError(c *gin.Context, err error, status int) {
+	var appErr *application.Err
+	var parameters *map[string]string
+	switch {
+	case errors.As(err, &appErr):
+		status = appErr.StatusCode
+		parameters = &appErr.Parameters
+	}
+
 	c.JSON(status, gin.H{
-		"code":  status,
-		"error": err.Error(),
-		"data":  nil,
+		"code":   status,
+		"error":  err.Error(),
+		"data":   nil,
+		"params": parameters,
 	})
 }
 

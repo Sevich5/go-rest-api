@@ -24,9 +24,16 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
-		panic("Error loading .env file")
+		panic("Err loading .env file")
+	}
+	_, err = os.Stat(".env.local")
+	if err == nil {
+		err := godotenv.Overload(".env.local")
+		if err != nil {
+			panic("Err loading .env.local file")
+		}
 	}
 	AppSecretKey := []byte(os.Getenv("APP_SECRET_KEY"))
 	if len(AppSecretKey) == 0 {

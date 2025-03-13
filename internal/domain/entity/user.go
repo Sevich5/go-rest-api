@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"errors"
+	"app/internal/domain"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -18,14 +18,14 @@ type User struct {
 
 func NewUser(email string, password string) (*User, error) {
 	if email == "" {
-		return nil, errors.New("email is required")
+		return nil, domain.NewError("email is required")
 	}
 	if password == "" {
-		return nil, errors.New("password is required")
+		return nil, domain.NewError("password is required")
 	}
 	hashedPassword, err := HashPassword(password)
 	if err != nil {
-		return nil, err
+		return nil, domain.NewError(err.Error())
 	}
 	//TODO need validation in ValuesObject
 	return &User{
@@ -40,7 +40,7 @@ func NewUser(email string, password string) (*User, error) {
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
-		return "", err
+		return "", domain.NewError(err.Error())
 	}
 	return string(hashedPassword), nil
 }

@@ -10,6 +10,7 @@ import (
 
 type ServiceRegistry struct {
 	TokenToolService *security.JWTTokenToolService
+	AuthService      *application.AuthService
 	UserService      *application.UserService
 }
 
@@ -18,6 +19,7 @@ func NewServiceRegistry(db *gorm.DB, cfg *configuration.Config) *ServiceRegistry
 	tokenToolService := security.NewJWTTokenToolService(cfg.Application.SecretKey)
 	return &ServiceRegistry{
 		TokenToolService: tokenToolService,
-		UserService:      application.NewUserService(userRepository, tokenToolService),
+		AuthService:      application.NewAuthService(userRepository, tokenToolService),
+		UserService:      application.NewUserService(userRepository),
 	}
 }

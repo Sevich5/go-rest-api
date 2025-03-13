@@ -14,10 +14,10 @@ func NewRouterRegistry(services *ServiceRegistry, mode string) *gin.Engine {
 	router := gin.Default()
 	router.Use(middleware.RecoveryMiddleware())
 	router.NoRoute(middleware.NotFoundMiddleware())
-	auth := authentication.NewJWTAuth(services.TokenToolService)
+	authMiddleware := authentication.NewJWTAuth(services.TokenToolService)
 	userHandler := controllers.NewUserRestHandler(services.UserService)
-	authHandler := controllers.NewAuthRestHandler(services.UserService)
-	controllers.AddUserGinRouter(userHandler, auth, router)
+	authHandler := controllers.NewAuthRestHandler(services.AuthService)
+	controllers.AddUserGinRouter(userHandler, authMiddleware, router)
 	controllers.AddAuthGinRouter(authHandler, router)
 	return router
 }

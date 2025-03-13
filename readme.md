@@ -27,3 +27,7 @@ make db-migration-status
 ````
 go run cmd/api/create_user.go [email] [password]
 ````
+## Running server
+````
+go run cmd/api/main.go
+````
