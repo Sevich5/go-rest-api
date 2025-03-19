@@ -18,7 +18,7 @@ func NewAuthRestHandler(service *application.AuthService) *AuthRestHandler {
 
 func (h *AuthRestHandler) Login(c *gin.Context) {
 	var requestData requestdto.LoginRequest
-	err := c.BindJSON(&requestData)
+	err := c.ShouldBindJSON(&requestData)
 	if err != nil {
 		return
 	}

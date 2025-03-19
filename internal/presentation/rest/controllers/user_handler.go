@@ -55,14 +55,14 @@ func (h *UserRestHandler) CreateUser(c *gin.Context) {
 
 func (h *UserRestHandler) UpdateUser(c *gin.Context) {
 	userJson := requestdto.UserDto{}
-	err := c.BindJSON(&userJson)
+	err := c.ShouldBindJSON(&userJson)
 	if err != nil {
 		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	user, err := h.service.UpdateUser(userJson)
 	if err != nil {
-		helpers.JsonError(c, err, 0)
+		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	helpers.JsonOk(c, dto.NewUserPublicDto(user))
@@ -71,14 +71,14 @@ func (h *UserRestHandler) UpdateUser(c *gin.Context) {
 
 func (h *UserRestHandler) DeleteUser(c *gin.Context) {
 	userJson := requestdto.UserDto{}
-	err := c.BindJSON(&userJson)
+	err := c.ShouldBindJSON(&userJson)
 	if err != nil {
 		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	err = h.service.DeleteUser(userJson.Id.String())
 	if err != nil {
-		helpers.JsonError(c, err, 0)
+		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	helpers.JsonOk(c, nil)
