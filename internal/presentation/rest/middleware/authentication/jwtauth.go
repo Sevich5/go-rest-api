@@ -3,7 +3,6 @@ package authentication
 import (
 	"app/internal/application"
 	"app/internal/presentation/helpers"
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
@@ -19,7 +18,7 @@ func (j *JWTAuth) Auth() gin.HandlerFunc {
 		tokenString := j.extractToken(c)
 		if tokenString == "" {
 			c.Abort()
-			helpers.JsonError(c, errors.New("no token"), http.StatusUnauthorized)
+			helpers.JsonError(c, application.NewError("No token"), http.StatusUnauthorized)
 			return
 		}
 		claims, err := j.ValidateJWT(tokenString, j.tool.GetSecret())
@@ -61,7 +60,7 @@ func (j *JWTAuth) ValidateJWT(tokenString string, secret []byte) (jwt.MapClaims,
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
-	return nil, errors.New("token is invalid")
+	return nil, application.NewError("Token is invalid")
 }
 
 func NewJWTAuth(tool application.TokenTool) *JWTAuth {

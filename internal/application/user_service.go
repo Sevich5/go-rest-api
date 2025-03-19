@@ -4,6 +4,7 @@ import (
 	"app/internal/application/requestdto"
 	"app/internal/domain/entity"
 	"app/internal/domain/interfaces"
+	"app/internal/domain/valueobject"
 	"github.com/google/uuid"
 	"net/http"
 )
@@ -20,35 +21,52 @@ func NewUserService(userRepository interfaces.UserRepository) *UserService {
 
 func (s *UserService) CreateUser(email string, password string) (*entity.User, error) {
 	found, _ := s.UserRepository.GetByEmail(email)
-	if found.GetIdString() != uuid.Nil.String() {
-		appErr := NewError("user with this email already exists")
+	if found.Id.Value() != uuid.Nil {
+		appErr := NewError("User with this email already exists")
 		appErr.StatusCode = http.StatusConflict
 		return nil, appErr
 	}
-	user, err := entity.NewUser(email, password)
+	voEmail, err := valueobject.NewEmail(email)
 	if err != nil {
 		return nil, NewErrorFromErr(err)
 	}
-	err = s.UserRepository.Create(user)
+	voPassword, err := valueobject.NewPassword(password)
 	if err != nil {
+		return nil, NewErrorFromErr(err)
+	}
+	user, err := entity.NewUser(voEmail, voPassword)
+	if err != nil {
+		return nil, NewErrorFromErr(err)
+	}
+	if err = s.UserRepository.Create(user); err != nil {
 		return nil, NewErrorFromErr(err)
 	}
 	return user, nil
 }
 
-func (s *UserService) UpdateUser(user *entity.User, newPassword string) error {
-	if newPassword != "" {
-		hashedPassword, err := entity.HashPassword(newPassword)
+func (s *UserService) UpdateUser(user *entity.User, dto requestdto.UserDto) error {
+	if dto.Password != "" {
+		if _, err := valueobject.NewPassword(dto.Password); err != nil {
+			return NewErrorFromErr(err)
+		}
+		hashedPassword, err := entity.HashPassword(dto.Password)
 		if err != nil {
 			return NewErrorFromErr(err)
 		}
-		user.Password = hashedPassword
+		user.Password, _ = valueobject.NewPassword(hashedPassword)
+	}
+	if dto.Email != "" {
+		voEmail, err := valueobject.NewEmail(dto.Email)
+		if err != nil {
+			return NewErrorFromErr(err)
+		}
+		user.Email = voEmail
 	}
 	err := s.UserRepository.Update(user)
 	if err != nil {
 		return NewErrorFromErr(err)
 	}
-	user.SetUpdatedAt()
+	user.SetUpdatedNow()
 	return nil
 }
 
@@ -75,7 +93,7 @@ func (s *UserService) GetUserById(id string) (*entity.User, error) {
 		appError.StatusCode = http.StatusNotFound
 		return nil, appError
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (s *UserService) GetUserByEmail(email string) (*entity.User, error) {
@@ -83,7 +101,7 @@ func (s *UserService) GetUserByEmail(email string) (*entity.User, error) {
 	if err != nil {
 		return nil, NewErrorFromErr(err)
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (s *UserService) GetAllUsers(dto requestdto.PaginatedDto) (users []*entity.User, err error, limitOut int, offsetOut int) {

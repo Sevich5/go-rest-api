@@ -23,27 +23,29 @@ type UserPrivateDto struct {
 
 func NewUserPublicDto(e *entity.User) *UserPublicDto {
 	var updatedAt *time.Time
-	if !e.UpdatedAt.IsZero() {
-		updatedAt = &e.UpdatedAt
+	if e.UpdatedAt.IsSet() {
+		voUpdatedAt := e.UpdatedAt.Value()
+		updatedAt = &voUpdatedAt
 	}
 	return &UserPublicDto{
-		Id:        uuid.MustParse(e.Id.String()),
-		Email:     e.Email,
-		CreatedAt: e.CreatedAt,
+		Id:        e.Id.Value(),
+		Email:     e.Email.Value(),
+		CreatedAt: e.CreatedAt.Value(),
 		UpdatedAt: updatedAt,
 	}
 }
 
 func NewUserPrivateDto(e *entity.User) *UserPrivateDto {
 	var updatedAt *time.Time
-	if !e.UpdatedAt.IsZero() {
-		updatedAt = &e.UpdatedAt
+	if e.UpdatedAt.IsSet() {
+		voUpdatedAt := e.UpdatedAt.Value()
+		updatedAt = &voUpdatedAt
 	}
 	return &UserPrivateDto{
-		Id:        uuid.MustParse(e.Id.String()),
-		Email:     e.Email,
-		Password:  e.Password,
-		CreatedAt: e.CreatedAt,
+		Id:        e.Id.Value(),
+		Email:     e.Email.Value(),
+		Password:  e.Password.Value(),
+		CreatedAt: e.CreatedAt.Value(),
 		UpdatedAt: updatedAt,
 	}
 }

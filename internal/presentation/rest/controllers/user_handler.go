@@ -65,7 +65,7 @@ func (h *UserRestHandler) UpdateUser(c *gin.Context) {
 		helpers.JsonError(c, err, http.StatusNotFound)
 		return
 	}
-	err = h.service.UpdateUser(user, userJson.Password)
+	err = h.service.UpdateUser(user, userJson)
 	if err != nil {
 		helpers.JsonError(c, err, http.StatusInternalServerError)
 		return

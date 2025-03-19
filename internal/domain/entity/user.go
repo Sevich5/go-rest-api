@@ -2,39 +2,24 @@ package entity
 
 import (
 	"app/internal/domain"
-	"github.com/google/uuid"
+	"app/internal/domain/valueobject"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
 type User struct {
-	Root
-	Id        uuid.UUID
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	AggregateRoot
+	Id        valueobject.Uuid
+	Email     valueobject.Email
+	Password  valueobject.Password
+	CreatedAt valueobject.OptionalTime
+	UpdatedAt valueobject.OptionalTime
 }
 
-func NewUser(email string, password string) (*User, error) {
-	if email == "" {
-		return nil, domain.NewError("email is required")
-	}
-	if password == "" {
-		return nil, domain.NewError("password is required")
-	}
-	hashedPassword, err := HashPassword(password)
-	if err != nil {
-		return nil, domain.NewError(err.Error())
-	}
-	//TODO need validation in ValuesObject
-	return &User{
-		Id:        uuid.New(),
-		Email:     email,
-		Password:  hashedPassword,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Time{},
-	}, nil
+type UserCreatedEvent struct {
+	DomainEventInterface
+	UserID valueobject.Uuid
+	Email  valueobject.Email
 }
 
 func HashPassword(password string) (string, error) {
@@ -46,13 +31,32 @@ func HashPassword(password string) (string, error) {
 }
 
 func (u *User) CheckPassword(password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	return bcrypt.CompareHashAndPassword([]byte(u.Password.Value()), []byte(password))
 }
 
-func (u *User) GetIdString() string {
-	return u.Id.String()
+func (u *User) SetUpdatedNow() {
+	u.UpdatedAt = valueobject.NewOptionalTime(time.Now())
 }
 
-func (u *User) SetUpdatedAt() {
-	u.UpdatedAt = time.Now()
+func NewUser(email valueobject.Email, password valueobject.Password) (*User, error) {
+	hashedPassword := valueobject.Password{}
+	if password.Value() != "" {
+		hashed, err := HashPassword(password.Value())
+		if err != nil {
+			return nil, err
+		}
+		hashedPassword, err = valueobject.NewPassword(hashed)
+		if err != nil {
+			return nil, err
+		}
+	}
+	user := &User{
+		AggregateRoot: *NewAggregateRoot(),
+		Id:            valueobject.NewUuid(),
+		Email:         email,
+		Password:      hashedPassword,
+	}
+	user.CreatedAt = valueobject.NewOptionalTime(time.Now())
+	user.AggregateRoot.AddDomainEvent(&UserCreatedEvent{UserID: user.Id, Email: user.Email})
+	return user, nil
 }

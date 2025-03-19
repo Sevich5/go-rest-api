@@ -29,7 +29,7 @@ func (s *AuthService) Login(email, password string) (string, error) {
 		appErr.StatusCode = http.StatusUnauthorized
 		return "", appErr
 	}
-	token, err := s.TokenTool.GenerateToken(user.Id, user.Email)
+	token, err := s.TokenTool.GenerateToken(user.Id.Value(), user.Email.Value())
 	if err != nil {
 		return "", err
 	}

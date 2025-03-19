@@ -9,12 +9,15 @@ import (
 func JsonError(c *gin.Context, err error, status int) {
 	var appErr *application.Err
 	var parameters *map[string]string
+	errStatus := status
 	switch {
 	case errors.As(err, &appErr):
 		status = appErr.StatusCode
 		parameters = &appErr.Parameters
 	}
-
+	if errStatus > 0 {
+		status = errStatus
+	}
 	c.JSON(status, gin.H{
 		"code":   status,
 		"error":  err.Error(),
