@@ -60,14 +60,9 @@ func (h *UserRestHandler) UpdateUser(c *gin.Context) {
 		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
-	user, err := h.service.GetUserById(userJson.Id.String())
+	user, err := h.service.UpdateUser(userJson)
 	if err != nil {
-		helpers.JsonError(c, err, http.StatusNotFound)
-		return
-	}
-	err = h.service.UpdateUser(user, userJson)
-	if err != nil {
-		helpers.JsonError(c, err, http.StatusInternalServerError)
+		helpers.JsonError(c, err, 0)
 		return
 	}
 	helpers.JsonOk(c, dto.NewUserPublicDto(user))
@@ -83,7 +78,7 @@ func (h *UserRestHandler) DeleteUser(c *gin.Context) {
 	}
 	err = h.service.DeleteUser(userJson.Id.String())
 	if err != nil {
-		helpers.JsonError(c, err, http.StatusInternalServerError)
+		helpers.JsonError(c, err, 0)
 		return
 	}
 	helpers.JsonOk(c, nil)

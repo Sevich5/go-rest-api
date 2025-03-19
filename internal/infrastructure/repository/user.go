@@ -6,6 +6,7 @@ import (
 	"app/internal/domain/interfaces"
 	"app/internal/infrastructure/persistence/converter"
 	"app/internal/infrastructure/persistence/model"
+	"errors"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -44,16 +45,22 @@ func (r *UserRepository) Create(user *entity.User) error {
 
 func (r *UserRepository) GetById(uuid uuid.UUID) (*entity.User, error) {
 	userModel := &model.User{}
-	if err := r.db.Where("id = ?", uuid).First(&userModel).Error; err != nil {
-		return &entity.User{}, application.NewErrorFromErr(err)
+	err := r.db.Where("id = ?", uuid).First(&userModel).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else if err != nil {
+		return nil, application.NewErrorFromErr(err)
 	}
 	return r.converter.FromModelToDomain(userModel), nil
 }
 
 func (r *UserRepository) GetByEmail(email string) (*entity.User, error) {
 	userModel := &model.User{}
-	if err := r.db.Where("email = ?", email).First(&userModel).Error; err != nil {
-		return &entity.User{}, application.NewErrorFromErr(err)
+	err := r.db.Where("email = ?", email).First(&userModel).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	} else if err != nil {
+		return nil, application.NewErrorFromErr(err)
 	}
 	return r.converter.FromModelToDomain(userModel), nil
 }
@@ -66,11 +73,7 @@ func (r *UserRepository) Update(user *entity.User) error {
 	return nil
 }
 
-func (r *UserRepository) Delete(id uuid.UUID) error {
-	user, err := r.GetById(id)
-	if err != nil {
-		return err
-	}
+func (r *UserRepository) Delete(user *entity.User) error {
 	userModel := r.converter.FromDomainToModel(user)
 	if err := r.db.Where("id = ?", userModel.GetModelId()).Delete(&userModel).Error; err != nil {
 		return application.NewErrorFromErr(err)

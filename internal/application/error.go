@@ -17,13 +17,19 @@ func NewError(message string) *Err {
 }
 
 func NewErrorFromErr(err error) *Err {
+	var appErr *Err
+	if errors.As(err, &appErr) {
+		outErr := NewError(err.Error())
+		outErr.StatusCode = appErr.StatusCode
+		outErr.Parameters = appErr.Parameters
+		return outErr
+	}
 	var domainErr *domain.Err
-	switch {
-	case errors.As(err, &domainErr):
-		appErr := NewError(err.Error())
-		appErr.StatusCode = domainErr.StatusCode
-		appErr.Parameters = domainErr.Parameters
-		return appErr
+	if errors.As(err, &domainErr) {
+		outErr := NewError(err.Error())
+		outErr.StatusCode = domainErr.StatusCode
+		outErr.Parameters = domainErr.Parameters
+		return outErr
 	}
 	return NewError(err.Error())
 }

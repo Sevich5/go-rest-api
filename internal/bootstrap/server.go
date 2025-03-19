@@ -31,8 +31,8 @@ func ServerRun() {
 	quitSignal := make(chan os.Signal, 1)
 	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGTERM)
 	<-quitSignal
-	log.Println("Gracefully shutting down server after 6 seconds...")
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	log.Println("Gracefully shutting down server after 3 seconds...")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
 		log.Println("Server shutdown:", err)

@@ -21,7 +21,7 @@ func NewUserService(userRepository interfaces.UserRepository) *UserService {
 
 func (s *UserService) CreateUser(email string, password string) (*entity.User, error) {
 	found, _ := s.UserRepository.GetByEmail(email)
-	if found.Id.Value() != uuid.Nil {
+	if found != nil && found.Id.Value() != uuid.Nil {
 		appErr := NewError("User with this email already exists")
 		appErr.StatusCode = http.StatusConflict
 		return nil, appErr
@@ -44,38 +44,50 @@ func (s *UserService) CreateUser(email string, password string) (*entity.User, e
 	return user, nil
 }
 
-func (s *UserService) UpdateUser(user *entity.User, dto requestdto.UserDto) error {
+func (s *UserService) UpdateUser(dto requestdto.UserDto) (*entity.User, error) {
+	user, err := s.GetUserById(dto.Id.String())
+	if err != nil {
+		return nil, NewErrorFromErr(err)
+	}
+	if user == nil {
+		appErr := NewError("User not found")
+		appErr.StatusCode = http.StatusNotFound
+		return nil, appErr
+	}
 	if dto.Password != "" {
 		if _, err := valueobject.NewPassword(dto.Password); err != nil {
-			return NewErrorFromErr(err)
+			return nil, NewErrorFromErr(err)
 		}
 		hashedPassword, err := entity.HashPassword(dto.Password)
 		if err != nil {
-			return NewErrorFromErr(err)
+			return nil, NewErrorFromErr(err)
 		}
 		user.Password, _ = valueobject.NewPassword(hashedPassword)
 	}
 	if dto.Email != "" {
 		voEmail, err := valueobject.NewEmail(dto.Email)
 		if err != nil {
-			return NewErrorFromErr(err)
+			return nil, NewErrorFromErr(err)
 		}
 		user.Email = voEmail
 	}
-	err := s.UserRepository.Update(user)
+	err = s.UserRepository.Update(user)
 	if err != nil {
-		return NewErrorFromErr(err)
+		return nil, NewErrorFromErr(err)
 	}
 	user.SetUpdatedNow()
-	return nil
+	return user, nil
 }
 
 func (s *UserService) DeleteUser(id string) error {
-	uid, err := uuid.Parse(id)
+	user, err := s.GetUserById(id)
 	if err != nil {
 		return NewErrorFromErr(err)
 	}
-	err = s.UserRepository.Delete(uid)
+	if user == nil {
+		return NewError("User not found")
+	}
+	err = s.UserRepository.Delete(user)
 	if err != nil {
 		return NewErrorFromErr(err)
 	}
@@ -90,6 +102,11 @@ func (s *UserService) GetUserById(id string) (*entity.User, error) {
 	user, err := s.UserRepository.GetById(uid)
 	if err != nil {
 		appError := NewError(err.Error())
+		appError.StatusCode = http.StatusNotFound
+		return nil, appError
+	}
+	if user == nil {
+		appError := NewError("User not found")
 		appError.StatusCode = http.StatusNotFound
 		return nil, appError
 	}
