@@ -20,6 +20,7 @@ func (h *AuthRestHandler) Login(c *gin.Context) {
 	var requestData requestdto.LoginRequest
 	err := c.ShouldBindJSON(&requestData)
 	if err != nil {
+		helpers.JsonError(c, err, http.StatusBadRequest)
 		return
 	}
 	email := requestData.Email

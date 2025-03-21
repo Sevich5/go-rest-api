@@ -18,7 +18,7 @@ func (j *JWTAuth) Auth() gin.HandlerFunc {
 		tokenString := j.extractToken(c)
 		if tokenString == "" {
 			c.Abort()
-			helpers.JsonError(c, application.NewError("No token"), http.StatusUnauthorized)
+			helpers.JsonError(c, application.NewAppError("No token"), http.StatusUnauthorized)
 			return
 		}
 		claims, err := j.ValidateJWT(tokenString, j.tool.GetSecret())
@@ -29,7 +29,6 @@ func (j *JWTAuth) Auth() gin.HandlerFunc {
 		}
 		c.Set("user_id", claims["user_id"])
 		c.Set("email", claims["email"])
-
 		c.Next()
 	}
 }
@@ -60,7 +59,7 @@ func (j *JWTAuth) ValidateJWT(tokenString string, secret []byte) (jwt.MapClaims,
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
-	return nil, application.NewError("Token is invalid")
+	return nil, application.NewAppErrorWithStatus("Token is invalid", http.StatusUnauthorized)
 }
 
 func NewJWTAuth(tool application.TokenTool) *JWTAuth {

@@ -25,9 +25,7 @@ func (t *JWTTokenToolService) GenerateToken(userID uuid.UUID, email string) (str
 
 	tokenString, err := token.SignedString(t.AppSecretKey)
 	if err != nil {
-		appErr := application.NewError(err.Error())
-		appErr.StatusCode = http.StatusServiceUnavailable
-		return "", appErr
+		return "", application.NewAppErrorWithStatus(err.Error(), http.StatusServiceUnavailable)
 	}
 
 	return tokenString, nil
