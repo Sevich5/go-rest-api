@@ -2,19 +2,14 @@ package main
 
 import (
 	"app/internal/domain/entity"
+	"app/internal/domain/valueobject"
 	"app/internal/infrastructure/configuration"
 	"app/internal/infrastructure/persistence"
 	"app/internal/infrastructure/repository"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 )
-
-func isValidEmail(email string) bool {
-	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	return re.MatchString(email)
-}
 
 func main() {
 	args := os.Args
@@ -22,11 +17,14 @@ func main() {
 		fmt.Println("Wrong number of arguments: must be <email> and <password> only")
 		return
 	}
-	email := strings.TrimSpace(args[1])
-	password := strings.TrimSpace(args[2])
-
-	if !isValidEmail(email) {
+	email, err := valueobject.NewEmail(strings.TrimSpace(args[1]))
+	if err != nil {
 		fmt.Println("Invalid email format")
+		return
+	}
+	password, err := valueobject.NewPassword(strings.TrimSpace(args[2]))
+	if err != nil {
+		fmt.Println("Invalid password format")
 		return
 	}
 	cfg := configuration.LoadConfig()
