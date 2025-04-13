@@ -67,9 +67,3 @@ func LoadConfig() *Config {
 		},
 	}
 }
-
-func (c *Config) GetPostgresDsn() string {
-	dsn := "postgres://" + c.Database.Username + ":" + c.Database.Password + "@"
-	dsn += c.Database.Host + ":" + c.Database.Port + "/" + c.Database.Database + "?sslmode=disable"
-	return dsn
-}

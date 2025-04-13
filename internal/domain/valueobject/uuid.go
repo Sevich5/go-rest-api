@@ -52,15 +52,3 @@ func NewUuid() Uuid {
 func NewUuidFromUuid(uuid uuid.UUID) Uuid {
 	return Uuid{value: uuid, isSet: true}
 }
-
-func NewUuidFromString(s string) (Uuid, error) {
-	id, err := uuid.Parse(s)
-	if err != nil {
-		return Uuid{}, err
-	}
-	return Uuid{value: id, isSet: true}, nil
-}
-
-func NullUuid() Uuid {
-	return Uuid{isSet: false}
-}
