@@ -1,7 +1,7 @@
-# Dockerized Golang REST Api boilerplate: nginx + gin + gorm + postgresSQL(with atlas migrations) + JWT Auth  
+# Dockerized Golang REST Api boilerplate: nginx + gin + gorm + PostgreSQL(with atlas migrations) + JWT Auth  
 
 ### Install:
-**PostgresSQL must be 15 version**
+**PostgreSQL must be 15 version**
 
 ````
 go install ariga.io/atlas/cmd/atlas@latest
